@@ -65,7 +65,7 @@ func New(options ...configFn) (r *Reporter, err error) {
 	r = &Reporter{
 		addr:        "127.0.0.1:8125",
 		registry:    metrics.DefaultRegistry,
-		percentiles: []float64{0.75, 0.95, 0.99, 0.999},
+		percentiles: []float64{0.50, 0.75, 0.95, 0.99, 0.999},
 	}
 
 	for _, opt := range options {
@@ -143,15 +143,14 @@ func (r *Reporter) submit() error {
 			ms := metric.Snapshot()
 
 			r.cn.Gauge(name+".count", float64(ms.Count()), r.tags, 1)
-			r.cn.Gauge(name+".max", float64(ms.Max()), r.tags, 1)
-			r.cn.Gauge(name+".min", float64(ms.Min()), r.tags, 1)
-			r.cn.Gauge(name+".mean", ms.Mean(), r.tags, 1)
-			r.cn.Gauge(name+".stddev", ms.StdDev(), r.tags, 1)
-			r.cn.Gauge(name+".var", ms.Variance(), r.tags, 1)
+			r.cn.Timing(name+".max", time.Duration(ms.Max()), r.tags, 1)
+			r.cn.Timing(name+".min", time.Duration(ms.Min()), r.tags, 1)
+			r.cn.Timing(name+".mean", time.Duration(ms.Mean()), r.tags, 1)
+			r.cn.Timing(name+".stddev", time.Duration(ms.StdDev()), r.tags, 1)
 
 			values := ms.Percentiles(r.percentiles)
 			for i, p := range r.p {
-				r.cn.Gauge(name+p, values[i], r.tags, 1)
+				r.cn.Timing(name+p, time.Duration(values[i]), r.tags, 1)
 			}
 		}
 	})

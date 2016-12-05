@@ -126,7 +126,7 @@ func TestReporter_FlushGaugeFloat64(t *testing.T) {
 }
 
 func TestReporter_FlushHistogram(t *testing.T) {
-	n := 10
+	n := 11
 	ch := newServer(t, n)
 
 	r := metrics.NewRegistry()
@@ -155,10 +155,51 @@ func TestReporter_FlushHistogram(t *testing.T) {
 		"foo.mean:6.000000|g",
 		"foo.stddev:5.000000|g",
 		"foo.var:25.000000|g",
+		"foo.pct-50.00:6.000000|g",
 		"foo.pct-75.00:11.000000|g",
 		"foo.pct-95.00:11.000000|g",
 		"foo.pct-99.00:11.000000|g",
 		"foo.pct-99.90:11.000000|g",
+	}
+	assert.Equal(t, e, res)
+}
+
+func TestReporter_FlushTimer(t *testing.T) {
+	n := 10
+	ch := newServer(t, n)
+
+	r := metrics.NewRegistry()
+	c := metrics.NewRegisteredTimer("foo", r)
+
+	for _, v := range []time.Duration{1, 1, 1, 1, 1, 1, 1, 1, 1, 10} {
+		c.Update(v * time.Millisecond)
+	}
+
+	dd, _ := New(WithAddress(addr), WithRegistry(r))
+	dd.Flush()
+
+	var res []string
+	for i := 0; i < n; i++ {
+		select {
+		case d := <-ch:
+			res = append(res, string(d))
+
+		case <-time.After(testWaitTimeout):
+			assert.FailNow(t, "timeout")
+		}
+	}
+
+	e := []string{
+		"foo.count:10.000000|g",
+		"foo.max:10.000000|ms",
+		"foo.min:1.000000|ms",
+		"foo.mean:1.900000|ms",
+		"foo.stddev:2.700000|ms",
+		"foo.pct-50.00:1.000000|ms",
+		"foo.pct-75.00:1.000000|ms",
+		"foo.pct-95.00:10.000000|ms",
+		"foo.pct-99.00:10.000000|ms",
+		"foo.pct-99.90:10.000000|ms",
 	}
 	assert.Equal(t, e, res)
 }
