@@ -58,6 +58,7 @@ type Reporter struct {
 	tags        []string
 	percentiles []float64
 	p           []string
+	ss          map[string]int64
 }
 
 // New creates a new Datadog metrics reporter
@@ -66,6 +67,7 @@ func New(options ...configFn) (r *Reporter, err error) {
 		addr:        "127.0.0.1:8125",
 		registry:    metrics.DefaultRegistry,
 		percentiles: []float64{0.50, 0.75, 0.95, 0.99, 0.999},
+		ss:          make(map[string]int64),
 	}
 
 	for _, opt := range options {
@@ -107,7 +109,10 @@ func (r *Reporter) submit() error {
 	r.registry.Each(func(name string, i interface{}) {
 		switch metric := i.(type) {
 		case metrics.Counter:
-			r.cn.Count(name, metric.Count(), r.tags, 1)
+			v := metric.Count()
+			l := r.ss[name]
+			r.cn.Count(name, v-l, r.tags, 1)
+			r.ss[name] = v
 
 		case metrics.Gauge:
 			r.cn.Gauge(name, float64(metric.Value()), r.tags, 1)

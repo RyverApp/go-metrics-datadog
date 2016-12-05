@@ -7,6 +7,8 @@ import (
 	"testing"
 	"time"
 
+	"regexp"
+
 	"github.com/rcrowley/go-metrics"
 	"github.com/stretchr/testify/assert"
 )
@@ -71,13 +73,25 @@ func TestNew_WithAddress(t *testing.T) {
 }
 
 func TestReporter_FlushCounter(t *testing.T) {
-	ch := newServer(t, 1)
+	ch := newServer(t, 2)
 
 	r := metrics.NewRegistry()
 	c := metrics.NewRegisteredCounter("foo", r)
-	c.Inc(1)
+	c.Inc(2)
 
 	dd, _ := New(WithAddress(addr), WithRegistry(r))
+	dd.Flush()
+
+	select {
+	case d := <-ch:
+		assert.Equal(t, "foo:2|c", string(d))
+
+	case <-time.After(testWaitTimeout):
+		assert.Fail(t, "timeout")
+	}
+
+	c.Inc(1)
+
 	dd.Flush()
 
 	select {
@@ -202,4 +216,40 @@ func TestReporter_FlushTimer(t *testing.T) {
 		"foo.pct-99.90:10.000000|g",
 	}
 	assert.Equal(t, e, res)
+}
+
+func TestReporter_FlushMeter(t *testing.T) {
+	r := metrics.NewRegistry()
+	c := metrics.NewRegisteredMeter("foo", r)
+
+	for i := 0; i < 10; i++ {
+		c.Mark(1)
+		time.Sleep(1 * time.Millisecond)
+	}
+
+	n := 5
+	ch := newServer(t, n)
+
+	dd, _ := New(WithAddress(addr), WithRegistry(r))
+	dd.Flush()
+
+	var res []string
+	for i := 0; i < n; i++ {
+		select {
+		case d := <-ch:
+			res = append(res, string(d))
+
+		case <-time.After(testWaitTimeout):
+			assert.FailNow(t, "timeout")
+		}
+	}
+
+	e := []string{
+		"foo.count:10.000000|g",
+		"foo.rate1:0.000000|g",
+		"foo.rate5:0.000000|g",
+		"foo.rate15:0.000000|g",
+	}
+	assert.Equal(t, e, res[:4])
+	assert.Regexp(t, regexp.MustCompile(`^foo\.mean:\d+\.\d+\|g$`), res[4])
 }
