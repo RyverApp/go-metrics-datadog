@@ -191,15 +191,15 @@ func TestReporter_FlushTimer(t *testing.T) {
 
 	e := []string{
 		"foo.count:10.000000|g",
-		"foo.max:10.000000|ms",
-		"foo.min:1.000000|ms",
-		"foo.mean:1.900000|ms",
-		"foo.stddev:2.700000|ms",
-		"foo.pct-50.00:1.000000|ms",
-		"foo.pct-75.00:1.000000|ms",
-		"foo.pct-95.00:10.000000|ms",
-		"foo.pct-99.00:10.000000|ms",
-		"foo.pct-99.90:10.000000|ms",
+		"foo.max:10.000000|g",
+		"foo.min:1.000000|g",
+		"foo.mean:1.900000|g",
+		"foo.stddev:2.700000|g",
+		"foo.pct-50.00:1.000000|g",
+		"foo.pct-75.00:1.000000|g",
+		"foo.pct-95.00:10.000000|g",
+		"foo.pct-99.00:10.000000|g",
+		"foo.pct-99.90:10.000000|g",
 	}
 	assert.Equal(t, e, res)
 }

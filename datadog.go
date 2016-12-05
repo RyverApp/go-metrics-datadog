@@ -143,14 +143,14 @@ func (r *Reporter) submit() error {
 			ms := metric.Snapshot()
 
 			r.cn.Gauge(name+".count", float64(ms.Count()), r.tags, 1)
-			r.cn.Timing(name+".max", time.Duration(ms.Max()), r.tags, 1)
-			r.cn.Timing(name+".min", time.Duration(ms.Min()), r.tags, 1)
-			r.cn.Timing(name+".mean", time.Duration(ms.Mean()), r.tags, 1)
-			r.cn.Timing(name+".stddev", time.Duration(ms.StdDev()), r.tags, 1)
+			r.cn.Gauge(name+".max", time.Duration(ms.Max()).Seconds()*1000, r.tags, 1)
+			r.cn.Gauge(name+".min", time.Duration(ms.Min()).Seconds()*1000, r.tags, 1)
+			r.cn.Gauge(name+".mean", time.Duration(ms.Mean()).Seconds()*1000, r.tags, 1)
+			r.cn.Gauge(name+".stddev", time.Duration(ms.StdDev()).Seconds()*1000, r.tags, 1)
 
 			values := ms.Percentiles(r.percentiles)
 			for i, p := range r.p {
-				r.cn.Timing(name+p, time.Duration(values[i]), r.tags, 1)
+				r.cn.Gauge(name+p, time.Duration(values[i]).Seconds()*1000, r.tags, 1)
 			}
 		}
 	})
