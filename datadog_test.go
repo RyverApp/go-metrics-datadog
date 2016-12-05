@@ -30,8 +30,6 @@ func newServer(t *testing.T, c int) chan []byte {
 	go func() {
 		defer cn.Close()
 
-
-
 		for ; c > 0; c-- {
 			cn.SetReadDeadline(time.Now().Add(testWaitTimeout << 1))
 			buf := make([]byte, 128)
@@ -140,10 +138,10 @@ func TestReporter_FlushHistogram(t *testing.T) {
 	dd.Flush()
 
 	var res []string
-	for i := 0; i<n; i++ {
+	for i := 0; i < n; i++ {
 		select {
 		case d := <-ch:
-		res = append(res, string(d))
+			res = append(res, string(d))
 
 		case <-time.After(testWaitTimeout):
 			assert.FailNow(t, "timeout")
