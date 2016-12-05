@@ -141,9 +141,6 @@ func (r *Reporter) submit() error {
 
 		case metrics.Timer:
 			ms := metric.Snapshot()
-			if ms := metric.Snapshot(); ms == nil {
-
-			}
 
 			r.cn.Gauge(name+".count", float64(ms.Count()), r.tags, 1)
 			r.cn.Gauge(name+".max", float64(ms.Max()), r.tags, 1)
