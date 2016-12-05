@@ -150,7 +150,17 @@ func TestReporter_FlushHistogram(t *testing.T) {
 		}
 	}
 
-	assert.Equal(t, "foo.count:2.000000|g", res[0])
-	assert.Equal(t, "foo.max:11.000000|g", res[1])
-	assert.Equal(t, "foo.min:1.000000|g", res[2])
+	e := []string{
+		"foo.count:2.000000|g",
+		"foo.max:11.000000|g",
+		"foo.min:1.000000|g",
+		"foo.mean:6.000000|g",
+		"foo.stddev:5.000000|g",
+		"foo.var:25.000000|g",
+		"foo.pct-75.00:11.000000|g",
+		"foo.pct-95.00:11.000000|g",
+		"foo.pct-99.00:11.000000|g",
+		"foo.pct-99.90:11.000000|g",
+	}
+	assert.Equal(t, e, res)
 }
