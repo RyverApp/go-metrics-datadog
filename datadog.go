@@ -49,6 +49,13 @@ func WithPercentiles(v []float64) configFn {
 	}
 }
 
+// WithClient sets the statsd client used to send metrics to Datadog
+func WithClient(v *statsd.Client) configFn {
+	return func(r *Reporter) {
+		r.cn = v
+	}
+}
+
 // Reporter represents a Datadog metrics reporter
 type Reporter struct {
 	addr        string
@@ -79,11 +86,14 @@ func New(options ...configFn) (r *Reporter, err error) {
 		r.p[i] = fmt.Sprintf(".pct-%.2f", p*100.0)
 	}
 
-	if FlushLength > 1 {
-		r.cn, err = statsd.NewBuffered(r.addr, FlushLength)
-	} else {
-		r.cn, err = statsd.New(r.addr)
+	if r.cn == nil {
+		if FlushLength > 1 {
+			r.cn, err = statsd.NewBuffered(r.addr, FlushLength)
+		} else {
+			r.cn, err = statsd.New(r.addr)
+		}
 	}
+
 	if err != nil {
 		return nil, err
 	}
