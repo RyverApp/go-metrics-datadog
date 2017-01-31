@@ -43,6 +43,8 @@ func WithRegistry(v metrics.Registry) configFn {
 
 // WithPercentiles sets the percentiles to use for statistical metrics.
 // The default percentiles are 75%, 95%, 99% and 99.9%
+//
+// Set to nil to disable percentiles.
 func WithPercentiles(v []float64) configFn {
 	return func(r *Reporter) {
 		r.percentiles = v
@@ -140,9 +142,11 @@ func (r *Reporter) submit() error {
 			r.cn.Gauge(name+".stddev", ms.StdDev(), r.tags, 1)
 			r.cn.Gauge(name+".var", ms.Variance(), r.tags, 1)
 
-			values := ms.Percentiles(r.percentiles)
-			for i, p := range r.p {
-				r.cn.Gauge(name+p, values[i], r.tags, 1)
+			if len(r.percentiles) > 0 {
+				values := ms.Percentiles(r.percentiles)
+				for i, p := range r.p {
+					r.cn.Gauge(name+p, values[i], r.tags, 1)
+				}
 			}
 
 		case metrics.Meter:
@@ -163,9 +167,11 @@ func (r *Reporter) submit() error {
 			r.cn.Gauge(name+".mean", time.Duration(ms.Mean()).Seconds()*1000, r.tags, 1)
 			r.cn.Gauge(name+".stddev", time.Duration(ms.StdDev()).Seconds()*1000, r.tags, 1)
 
-			values := ms.Percentiles(r.percentiles)
-			for i, p := range r.p {
-				r.cn.Gauge(name+p, time.Duration(values[i]).Seconds()*1000, r.tags, 1)
+			if len(r.percentiles) > 0 {
+				values := ms.Percentiles(r.percentiles)
+				for i, p := range r.p {
+					r.cn.Gauge(name+p, time.Duration(values[i]).Seconds()*1000, r.tags, 1)
+				}
 			}
 		}
 	})
