@@ -218,6 +218,41 @@ func TestReporter_FlushTimer(t *testing.T) {
 	assert.Equal(t, e, res)
 }
 
+func TestReporter_FlushTimer_NoPercentiles(t *testing.T) {
+	n := 5
+	ch := newServer(t, n)
+
+	r := metrics.NewRegistry()
+	c := metrics.NewRegisteredTimer("foo", r)
+
+	for _, v := range []time.Duration{1, 1, 1, 1, 1, 1, 1, 1, 1, 10} {
+		c.Update(v * time.Millisecond)
+	}
+
+	dd, _ := New(WithAddress(addr), WithRegistry(r), WithPercentiles(nil))
+	dd.Flush()
+
+	var res []string
+	for i := 0; i < n; i++ {
+		select {
+		case d := <-ch:
+			res = append(res, string(d))
+
+		case <-time.After(testWaitTimeout):
+			assert.FailNow(t, "timeout")
+		}
+	}
+
+	e := []string{
+		"foo.count:10.000000|g",
+		"foo.max:10.000000|g",
+		"foo.min:1.000000|g",
+		"foo.mean:1.900000|g",
+		"foo.stddev:2.700000|g",
+	}
+	assert.Equal(t, e, res)
+}
+
 func TestReporter_FlushMeter(t *testing.T) {
 	r := metrics.NewRegistry()
 	c := metrics.NewRegisteredMeter("foo", r)

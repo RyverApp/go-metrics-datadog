@@ -83,9 +83,11 @@ func New(options ...configFn) (r *Reporter, err error) {
 		opt(r)
 	}
 
-	r.p = make([]string, len(r.percentiles))
-	for i, p := range r.percentiles {
-		r.p[i] = fmt.Sprintf(".pct-%.2f", p*100.0)
+	if len(r.percentiles) > 0 {
+		r.p = make([]string, len(r.percentiles))
+		for i, p := range r.percentiles {
+			r.p[i] = fmt.Sprintf(".pct-%.2f", p*100.0)
+		}
 	}
 
 	if r.cn == nil {
