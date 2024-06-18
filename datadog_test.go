@@ -4,10 +4,9 @@ import (
 	"fmt"
 	"net"
 	"os"
+	"regexp"
 	"testing"
 	"time"
-
-	"regexp"
 
 	"github.com/rcrowley/go-metrics"
 	"github.com/stretchr/testify/assert"

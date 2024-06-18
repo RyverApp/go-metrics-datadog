@@ -1,10 +1,9 @@
 package datadog
 
 import (
+	"fmt"
 	"strings"
 	"time"
-
-	"fmt"
 
 	"github.com/DataDog/datadog-go/statsd"
 	"github.com/rcrowley/go-metrics"
